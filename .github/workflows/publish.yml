@@ -1,0 +1,31 @@
+# Every hour: fill and publish the long video Ruslan uploaded as a draft, keep 3 Shorts a day in Buffer.
+name: publish
+on:
+  schedule:
+    - cron: '20 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: konveyer
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: tools
+        run: |
+          pip install -q google-api-python-client google-auth
+          git config user.name konveyer && git config user.email konveyer@users.noreply.github.com
+      - name: run
+        env:
+          BUFFER_KEY: ${{ secrets.BUFFER_KEY }}
+          YT_TOKEN_JSON: ${{ secrets.YT_TOKEN_JSON }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT: ${{ secrets.TG_CHAT }}
+        run: python3 scripts/publish.py
