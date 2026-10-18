@@ -1,0 +1,31 @@
+# Проба: собрать один готовый ролик в облаке и замерить время. Запуск вручную.
+name: proba-sborki
+on:
+  workflow_dispatch:
+    inputs:
+      rolik:
+        description: папка в queue/
+        default: dolgozhiteli
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: remotion
+        working-directory: remotion
+        run: npm install --no-audit --no-fund && npx remotion browser ensure
+      - name: сборка
+        env:
+          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+        run: nproc && python3 scripts/build.py queue/${{ inputs.rolik }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.rolik }}
+          path: out/
+          retention-days: 7

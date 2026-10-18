@@ -1,0 +1,10 @@
+node_modules/
+out/
+cache/
+remotion/public/stock/
+remotion/public/voice.wav
+remotion/src/data.ts
+remotion/src/abzacy.json
+remotion/src/slova.json
+*.key
+.env
