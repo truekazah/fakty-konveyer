@@ -15,3 +15,12 @@ jobs:
         with:
           node-version: 22
       - run: echo ${{ inputs.rolik }} && node --version
+      - name: build
+        env:
+          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
+        run: echo "key len ${#PEXELS_KEY}" && mkdir -p out && echo hi > out/a.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: test
+          path: out/
+          retention-days: 7
