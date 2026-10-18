@@ -1,10 +1,10 @@
-# Проба: собрать один готовый ролик в облаке и замерить время. Запуск вручную.
+# Proba: build one ready video in the cloud and time it. Manual run.
 name: proba-sborki
 on:
   workflow_dispatch:
     inputs:
       rolik:
-        description: папка в queue/
+        description: folder in queue
         default: dolgozhiteli
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
       - name: remotion
         working-directory: remotion
         run: npm install --no-audit --no-fund && npx remotion browser ensure
-      - name: сборка
+      - name: build
         env:
           PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
         run: nproc && python3 scripts/build.py queue/${{ inputs.rolik }}
