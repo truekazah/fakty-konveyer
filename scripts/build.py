@@ -84,7 +84,7 @@ if '--bez-shorts' not in sys.argv:
         d = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0',
                                   str(OUT / f'{sid}-s.mp4')], capture_output=True, text=True).stdout)
         run('ffmpeg', '-v', 'error', '-y', '-i', OUT / f'{sid}-s.mp4', '-c:v', 'copy',
-            '-af', f'volume=0:enable=gte(t\,{d - 1.9:.2f})', '-c:a', 'aac', '-b:a', '256k', OUT / f'{sid}-m.mp4')
+            '-af', f'volume=0:enable=gte(t\\,{d - 1.9:.2f})', '-c:a', 'aac', '-b:a', '256k', OUT / f'{sid}-m.mp4')
         (OUT / f'{sid}-s.mp4').unlink()
         loud(OUT / f'{sid}-m.mp4', OUT / f'{sid}.mp4')
         log(sid, 'готов')
