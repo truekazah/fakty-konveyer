@@ -7,7 +7,7 @@
 #   "SUBJ": {"абзац": "что в кадре"} (по умолчанию - заголовок абзаца до точки),
 #   "CHAPTERS": [[абзац, "Глава"]], "COVER": {...}, "SHORTS": [{"id", "abz": [с, по], "title", "text"}]}
 import difflib, json, re, subprocess, sys, time, pathlib
-from common import ROOT, looks_like, paragraphs, run, save_state, state, tg
+from common import audio16k, ROOT, looks_like, paragraphs, run, save_state, state, tg
 from stock import download
 
 Q = (ROOT / sys.argv[1]).resolve()
@@ -61,7 +61,7 @@ def norm(s):
 
 W = []
 for i, p in enumerate(parts, 1):
-    segs, _ = model.transcribe(str(p), language='ru', word_timestamps=True)
+    segs, _ = model.transcribe(audio16k(p), language='ru', word_timestamps=True)
     hyp = [[w.start, w.end, w.word.strip()] for s in segs for w in s.words]
     off = abzacy[i - 1]['s']
     rr = []

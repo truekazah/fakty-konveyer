@@ -79,7 +79,14 @@ log('ролик готов:', round((OUT / f'{Q.name}.mp4').stat().st_size / 2**
 if '--bez-shorts' not in sys.argv:
     for sid in re.findall(r"id: '(Short-[^']+)'", data):
         rem('render', 'src/index.ts', sid, OUT / f'{sid}-s.mp4', '--codec=h264', '--crf=18', '--audio-bitrate=256k')
-        loud(OUT / f'{sid}-s.mp4', OUT / f'{sid}.mp4')
+        # тишина под плашкой «Полное видео»: глушилка в Film.tsx не срабатывает в Shorts - там слышно
+        # начало следующего абзаца (тест 18.10.2026, Whisper: «Вот такие они»), поэтому глушим здесь
+        d = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0',
+                                  str(OUT / f'{sid}-s.mp4')], capture_output=True, text=True).stdout)
+        run('ffmpeg', '-v', 'error', '-y', '-i', OUT / f'{sid}-s.mp4', '-c:v', 'copy',
+            '-af', f'volume=0:enable=gte(t\,{d - 1.9:.2f})', '-c:a', 'aac', '-b:a', '256k', OUT / f'{sid}-m.mp4')
+        (OUT / f'{sid}-s.mp4').unlink()
+        loud(OUT / f'{sid}-m.mp4', OUT / f'{sid}.mp4')
         log(sid, 'готов')
 
 # ---------- описание с главами (как _общее/описание.py) ----------

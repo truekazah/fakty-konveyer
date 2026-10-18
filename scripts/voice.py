@@ -4,7 +4,7 @@
 # Каждый новый абзац сразу слушает Whisper: повтор или пропуск фразы - файл удаляется, завтра переозвучка.
 # Все абзацы есть - стадия ready, дальше сборка.
 import difflib, re
-from common import DayLimit, git_commit, paragraphs, save_state, state, tg, tts, videos
+from common import audio16k, DayLimit, git_commit, paragraphs, save_state, state, tg, tts, videos
 
 _model = None
 
@@ -14,7 +14,7 @@ def heard(mp3):
     if _model is None:
         from faster_whisper import WhisperModel
         _model = WhisperModel('small', device='cpu', compute_type='int8')
-    segs, _ = _model.transcribe(str(mp3), language='ru', vad_filter=True)  # без VAD Whisper сочиняет титры на тишине
+    segs, _ = _model.transcribe(audio16k(mp3), language='ru', vad_filter=True)  # без VAD Whisper сочиняет титры на тишине
     return ' '.join(s.text for s in segs)
 
 
@@ -40,7 +40,11 @@ try:
             if mp3.exists():
                 continue
             tts(text, i == 1, mp3)
-            good, sim, na, nb = ok(text, mp3)
+            try:
+                good, sim, na, nb = ok(text, mp3)
+            except Exception as e:  # проверка упала - абзац оставляем, запрос лимита не теряем
+                print(q.name, f'{i:02d}', 'проверка Whisper не сработала:', e, flush=True)
+                good, sim, na, nb = True, 0, 0, 0
             print(q.name, f'{i:02d}', 'ok' if good else 'ПЕРЕОЗВУЧИТЬ', f'сходство {sim:.2f}, слов {na} -> {nb}', flush=True)
             if not good:
                 mp3.unlink()

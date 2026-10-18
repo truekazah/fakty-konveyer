@@ -37,6 +37,14 @@ def http_json(url, body=None, headers=None, timeout=300):
     return json.load(urllib.request.urlopen(req, timeout=timeout))
 
 
+def audio16k(path):
+    # звук для Whisper через ffmpeg: в облаке faster-whisper + свежий PyAV не открывают mp3 (metadata_errors, 18.10.2026)
+    import numpy as np
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', str(path), '-f', 's16le', '-ac', '1', '-ar', '16000', '-'],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.int16).astype(np.float32) / 32768.0
+
+
 # ---------- Gemini ----------
 class DayLimit(Exception):
     pass
