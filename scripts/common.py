@@ -75,15 +75,31 @@ def tts(text, hook, mp3):
                     '-b:a', '128k', str(mp3)], input=pcm, check=True)
 
 
+# Проверка кадров 18.10.2026 на 12 кадрах с известным ответом: 3.5-flash-lite 11 из 12, 3.1-flash-lite 10 из 12,
+# 3.8-flash точнее, но бесплатно всего ~25 картинок в день (кончился на подготовке одного ролика), gemma-4 - ошибки 500.
+VISION = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.8-flash']
+_vision_dead = set()
+
+
 def looks_like(jpg, word):
-    # Gemini смотрит стоп-кадр: подходит ли он к слову диктора. Проверено 18.10.2026: 4 подмены из 4 поймал.
+    # Gemini смотрит стоп-кадр: подходит ли он к слову диктора. Все 4 подмены из 4 (ослы вместо гиены и т.п.) пойманы.
     img = base64.b64encode(pathlib.Path(jpg).read_bytes()).decode()
     prompt = (f'Это стоп-кадр стокового видео для научно-популярного ролика. Когда диктор говорит «{word}», '
-              'на экране должен быть именно этот объект, хорошо различимый. Подходит ли кадр? '
-              'Первое слово ответа - ДА или НЕТ, дальше одной фразой, что на кадре на самом деле.')
-    r = gemini('gemini-3.8-flash', [{'inline_data': {'mime_type': 'image/jpeg', 'data': img}}, {'text': prompt}])
-    a = r['candidates'][0]['content']['parts'][0]['text'].strip().lstrip('*').strip()
-    return a.upper().startswith('ДА'), a
+              'на экране должен быть именно этот объект, узнаваемый. Если он виден и узнаётся - ДА, даже если в кадре '
+              'не целиком, их несколько или рядом есть что-то ещё. НЕТ - если на кадре другое животное или предмет, '
+              'или объекта не разглядеть. Первое слово ответа - ДА или НЕТ, дальше одной фразой, что на кадре на самом деле.')
+    for model in VISION:
+        if model in _vision_dead:
+            continue
+        try:
+            r = gemini(model, [{'inline_data': {'mime_type': 'image/jpeg', 'data': img}}, {'text': prompt}])
+        except DayLimit:
+            _vision_dead.add(model)
+            continue
+        parts = r['candidates'][0]['content']['parts']
+        a = ' '.join(p.get('text', '') for p in parts if not p.get('thought')).strip().lstrip('*').strip()
+        return a.upper().startswith('ДА'), a
+    return True, 'проверка пропущена: у всех моделей кончился дневной лимит'
 
 
 # ---------- Telegram ----------

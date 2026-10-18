@@ -3,7 +3,7 @@
 #    -> voice.mp3, abzacy.json, slova.json (перенос _общее/голос.py);
 # 2) кадры: стоп-кадр каждого клипа смотрит Gemini; «не то» - замена из запаса абзаца (POOL в plan.json);
 # 3) data.ts для Remotion (перенос _общее/данные.py) + Shorts по абзацам из plan.json.
-# plan.json: {"PLAN": [[абзац, ["клип" | "клип@сек"]]], "POOL": {"абзац": [запасные клипы]},
+# plan.json: {"PLAN": [[абзац, ["клип" | "клип@сек" | "~клип" - фон без проверки]]], "POOL": {"абзац": [запасные клипы]},
 #   "SUBJ": {"абзац": "что в кадре"} (по умолчанию - заголовок абзаца до точки),
 #   "CHAPTERS": [[абзац, "Глава"]], "COVER": {...}, "SHORTS": [{"id", "abz": [с, по], "title", "text"}]}
 import difflib, json, re, subprocess, sys, time, pathlib
@@ -122,6 +122,9 @@ for p, clips in PL['PLAN']:
     word = subj.get(p) or ABZ[p - 1].split('.')[0][:40]
     keep = []
     for c in clips:
+        if c.startswith('~'):  # «~клип» - фон (льды, волны, небо): животного там нет и не должно быть, не проверяем
+            keep.append(c[1:])
+            continue
         if frame_ok(c, word):
             keep.append(c)
             continue
@@ -133,7 +136,7 @@ for p, clips in PL['PLAN']:
         else:
             notes.append(f'абзац {p}: {c} убран, замены нет')
     if not keep:
-        keep = clips[:1]
+        keep = [clips[0].lstrip('~')]
         notes.append(f'абзац {p}: ни один клип не прошёл проверку, оставлен {clips[0]}')
         tg(f'Конвейер {Q.name}: в абзаце {p} («{word}») Gemini забраковал все кадры. Ролик соберу, но проверь этот кусок.')
     plan.append([p, keep])

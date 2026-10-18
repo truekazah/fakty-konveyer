@@ -8,3 +8,4 @@ remotion/src/abzacy.json
 remotion/src/slova.json
 *.key
 .env
+tmp/
