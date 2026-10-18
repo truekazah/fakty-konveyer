@@ -1,7 +1,17 @@
 name: hello
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      rolik:
+        description: folder
+        default: dolgozhiteli
 jobs:
   hi:
     runs-on: ubuntu-latest
+    timeout-minutes: 300
     steps:
-      - run: echo privet
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: echo ${{ inputs.rolik }} && node --version
