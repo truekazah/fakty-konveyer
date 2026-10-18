@@ -17,5 +17,5 @@ jobs:
       - run: echo ${{ inputs.rolik }} && node --version
       - name: build
         env:
-          PEXELS_KEY: ${{ secrets.PEXELS_KEY }}
-        run: echo "key len ${#PEXELS_KEY}" && mkdir -p out && echo hi > out/a.txt
+          K: ${{ secrets.PEXELS_KEY }}
+        run: test -n "$K" && echo key-ok
