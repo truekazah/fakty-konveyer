@@ -100,11 +100,13 @@ def asset(q, name):
 built = videos('built')
 if built:
     y = yt()
-    drafts = {v['snippet']['title']: v['snippet']['resourceId']['videoId'] for v in uploads(y)
+    # Studio берёт название из имени файла и меняет «-» на пробел: «01-skorost» -> «01 skorost»
+    key = lambda t: ' '.join(t.lower().replace('-', ' ').replace('_', ' ').split())
+    drafts = {key(v['snippet']['title']): v['snippet']['resourceId']['videoId'] for v in uploads(y)
               if v['status']['privacyStatus'] != 'public'}
     for q in built:
         st, meta = state(q), json.loads((q / 'meta.json').read_text(encoding='utf-8'))
-        vid = drafts.get(q.name)
+        vid = drafts.get(key(q.name))
         if not vid:
             continue
         desc = urllib.request.urlopen(asset(q, 'opisanie.txt'), timeout=60).read().decode('utf-8')
