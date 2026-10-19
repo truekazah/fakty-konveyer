@@ -1,3 +1,8 @@
 {
- "stage": "ready"
+ "stage": "prepared",
+ "notes": [
+  "абзац 4: swift-bird-02 убран, замены нет",
+  "абзац 4: swift-bird-01 убран, замены нет",
+  "абзац 6: pronghorn-antelope-02 убран, замены нет"
+ ]
 }
