@@ -8,7 +8,7 @@
 | Что | Когда | Скрипт |
 |---|---|---|
 | Озвучка ~12 абзацев (Gemini Orus) + сборка одного готового ролика + релиз + сообщение в Telegram | каждый день 12:15 по Астане | `daily.yml` → `scripts/daily.py` |
-| Черновик Руслана в Studio → заполнить и открыть; Shorts в Buffer по 3 в день | каждый час | `publish.yml` → `scripts/publish.py` |
+| Черновик Руслана в Studio → заполнить и открыть; Shorts в Buffer по 3 в день одной пачкой (с 10:00; если сегодня не было - сразу) | каждый час | `publish.yml` → `scripts/publish.py` |
 
 Стадии ролика (`queue/<папка>/state.json`): `voice` → `ready` → `prepared` → `built` → `published`
 (`test` - не трогать). Сообщения - бот @danu_pravda_konveyer_bot, чат Руслана.

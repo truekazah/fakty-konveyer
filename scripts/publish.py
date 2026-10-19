@@ -1,14 +1,16 @@
 # Публикатор, раз в час: python scripts/publish.py
 # 1) YouTube: ролик собран (stage built) -> ищет черновик с названием = имя файла (<папка>.mp4, его грузит Руслан),
 #    ставит название, описание, обложку, плейлисты, открывает; встраивает в цепочку «Следующее видео» (chain.json).
-# 2) Buffer: Shorts по 3 в день (10:00, 15:00, 20:00 по Астане), в очереди Buffer не больше 9 (бесплатно - 10).
+# 2) Buffer: Shorts по 3 в день одной пачкой подряд (с 10:00 по Астане; если сегодня ещё не было - сразу),
+#    в очереди Buffer не больше 9 (бесплатно - 10).
 #    Shorts ролика ставятся, когда длинный вышел (в описании ссылка на него) или через 2 дня после сборки.
 import datetime as dt, json, os, pathlib, sys, tempfile, urllib.request
 from common import ROOT, TZ, git_commit, http_json, save_state, state, tg, videos
 
 NOW = dt.datetime.now(dt.timezone.utc)
 ASTANA = dt.timezone(dt.timedelta(hours=5))
-SLOTS = (10, 15, 20)
+BATCH_HOUR = 10  # пачка Shorts на день
+PER_DAY = 3
 MAX_QUEUE = 9
 TAGS = ['интересные факты', 'факты', 'это интересно', 'наука', 'познавательное', 'да ну правда']
 REPO = os.environ.get('GITHUB_REPOSITORY', 'truekazah/fakty-konveyer')
@@ -136,11 +138,14 @@ if built:
 # ---------- 2. Shorts в Buffer ----------
 plan = []  # (ролик, short) - ещё не поставленные, по порядку
 future = []
+dues = []  # все Shorts, и вышедшие, - чтобы считать по 3 в день
 for q in videos():
     st = state(q)
     for s in st.get('shorts', {}).values():
-        if s.get('due') and dt.datetime.fromisoformat(s['due']) > NOW:
-            future.append(dt.datetime.fromisoformat(s['due']))
+        if s.get('due'):
+            dues.append(dt.datetime.fromisoformat(s['due']))
+            if dues[-1] > NOW:
+                future.append(dues[-1])
     if st['stage'] not in ('built', 'published'):
         continue
     ready = st['stage'] == 'published' or NOW - dt.datetime.fromisoformat(st['built']) > dt.timedelta(days=2)
@@ -151,24 +156,28 @@ for q in videos():
             plan.append((q, s))
 
 
-def next_slot(after):
-    d = after.astimezone(ASTANA)
+def next_slot(dues):
+    # первый день, где Shorts меньше PER_DAY; в пачке подряд, с разницей в минуту
+    d = NOW.astimezone(ASTANA)
     for k in range(0, 30):
         day = (d + dt.timedelta(days=k)).date()
-        for h in SLOTS:
-            t = dt.datetime(day.year, day.month, day.day, h, tzinfo=ASTANA)
-            if t > d + dt.timedelta(minutes=30):
-                return t
+        n = sum(1 for t in dues if t.astimezone(ASTANA).date() == day)
+        if n >= PER_DAY:
+            continue
+        start = dt.datetime(day.year, day.month, day.day, BATCH_HOUR, tzinfo=ASTANA)
+        if start < d + dt.timedelta(minutes=5):
+            start = d + dt.timedelta(minutes=5)
+        later = [t for t in dues if t.astimezone(ASTANA).date() == day]
+        return max([start] + [t + dt.timedelta(minutes=1) for t in later])
 
 
 M = ('mutation($input: CreatePostInput!){ createPost(input:$input){ __typename '
      '... on PostActionSuccess { post { id dueAt status } } ... on MutationError { message } } }')
-last = max(future + [NOW])
 for q, s in plan:
     if len(future) >= MAX_QUEUE:
         break
     st = state(q)
-    due = next_slot(last)
+    due = next_slot(dues)
     link = f"\n\nПолное видео: https://youtu.be/{st['yt_id']}" if st.get('yt_id') else '\n\nПолное видео - на канале.'
     input_ = {'channelId': BUFFER_YT, 'text': s['text'] + link + '\n\n' + s.get('tags', '#факты #интересныефакты #shorts'),
               'assets': [{'video': {'url': asset(q, f"Short-{s['id']}.mp4"), 'metadata': {'thumbnailOffset': 1000}}}],
@@ -183,7 +192,7 @@ for q, s in plan:
         break
     st.setdefault('shorts', {})[s['id']] = {'buffer': res['post']['id'], 'due': due.isoformat()}
     save_state(q, st)
-    future.append(due); last = due
+    future.append(due); dues.append(due)
     print('Short в Buffer:', q.name, s['id'], due.isoformat())
 
 git_commit('Публикация')
