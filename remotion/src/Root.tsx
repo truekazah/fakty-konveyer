@@ -17,7 +17,7 @@ export const Root: React.FC = () => (
 				fps={FPS}
 				width={1080}
 				height={1920}
-				defaultProps={{from: s.from, to: s.to, title: s.title, vertical: true, outro: s.outro}}
+				defaultProps={{from: s.from, to: s.to, title: s.title, vertical: true, outro: s.outro, ask: s.ask}}
 			/>
 		))}
 	</>

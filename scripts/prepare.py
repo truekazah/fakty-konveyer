@@ -151,9 +151,11 @@ shorts = []
 for s in PL.get('SHORTS', []):
     a, b = s['abz']
     # последние 1,8 сек - плашка «Полное видео - на канале», звук в ней глушится (Film.tsx, tail),
-    # поэтому начало следующего абзаца не слышно
-    shorts.append("{id: 'Short-%s', from: %.2f, to: %.2f, title: '%s', outro: 'Полное видео - на канале'}" % (
-        s['id'], max(0, abzacy[a - 1]['s'] - 0.15), abzacy[b - 1]['e'] + 1.9, s['title']))
+    # поэтому начало следующего абзаца не слышно; с вопросом зрителю (ask) плашка висит 3,8 сек
+    ask = s.get('ask', '').replace("'", '’')
+    shorts.append("{id: 'Short-%s', from: %.2f, to: %.2f, title: '%s', outro: 'Полное видео - на канале'%s}" % (
+        s['id'], max(0, abzacy[a - 1]['s'] - 0.15), abzacy[b - 1]['e'] + (3.9 if ask else 1.9), s['title'],
+        f", ask: '{ask}'" if ask else ''))
 ts = f"""// Таймлайн ролика {Q.name}. Сгенерировано scripts/prepare.py - править plan.json, не этот файл.
 import slova from './slova.json';
 import abzacy from './abzacy.json';
@@ -183,7 +185,7 @@ export const CHAPTERS = (
 
 export const PLATES = [1, ABZ.length];
 
-export const SHORTS: {{id: string; from: number; to: number; title: string; outro?: string}}[] = [{', '.join(shorts)}];
+export const SHORTS: {{id: string; from: number; to: number; title: string; outro?: string; ask?: string}}[] = [{', '.join(shorts)}];
 
 export const COVER = {{clip: '{c['clip']}', sec: {c['sec']}, small: '{c['small']}', big: '{c['big']}'}};
 """

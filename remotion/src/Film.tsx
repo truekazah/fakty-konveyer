@@ -197,8 +197,9 @@ const Music: React.FC<{off: number; len: number}> = ({off, len}) => {
 
 // ---------- весь таймлайн; off - с какой секунды голоса начинать (для Shorts) ----------
 // outro - плашка в конце Short; пустая строка - без плашки (Short сам по себе, длинной версии нет).
-export const Film: React.FC<{from?: number; to?: number; title?: string; vertical?: boolean; outro?: string}> = ({from = 0, to, title, vertical = false, outro = 'Полное видео - на канале'}) => {
-	const tail = vertical && outro ? F(1.8) : 0;
+// ask - вопрос зрителю крупно над outro, плашка висит дольше (3,8 сек), чтобы успели прочитать.
+export const Film: React.FC<{from?: number; to?: number; title?: string; vertical?: boolean; outro?: string; ask?: string}> = ({from = 0, to, title, vertical = false, outro = 'Полное видео - на канале', ask}) => {
+	const tail = vertical && outro ? F(ask ? 3.8 : 1.8) : 0;
 	const off = F(from);
 	const endcard = vertical ? 0 : F(END_SEC);
 	const end = F(to ?? VOICE_SEC + 1.5) + endcard;
@@ -220,7 +221,7 @@ export const Film: React.FC<{from?: number; to?: number; title?: string; vertica
 							<Chapter n={i + 1} title={c.title} />
 						</Sequence>
 					))}
-				{/* в Shorts последние 1,8 сек - плашка «Полное видео», голос и субтитры к этому моменту уже кончились */}
+				{/* в Shorts последние 1,8 сек (с вопросом 3,8) - плашка «Полное видео», голос и субтитры к этому моменту уже кончились */}
 				<Sequence durationInFrames={tail ? end - tail : undefined}>
 					<Karaoke vertical={vertical} plateFirst={vertical ? F(from) + F(2.2) : undefined} />
 				</Sequence>
@@ -234,9 +235,20 @@ export const Film: React.FC<{from?: number; to?: number; title?: string; vertica
 			{tail ? (
 				<Sequence from={len - tail}>
 					<AbsoluteFill style={{background: 'rgba(0,0,0,.6)', alignItems: 'center', justifyContent: 'center'}}>
-						<div style={{background: YEL, color: INK, font: `700 74px/1.15 ${FONT}`, textTransform: 'uppercase', padding: '28px 40px', textAlign: 'center', margin: '0 70px'}}>
-							{outro}
-						</div>
+						{ask ? (
+							<>
+								<div style={{background: YEL, color: INK, font: `700 80px/1.15 ${FONT}`, textTransform: 'uppercase', padding: '32px 44px', textAlign: 'center', margin: '0 60px'}}>
+									{ask}
+								</div>
+								<div style={{marginTop: 48, background: '#fff', color: INK, font: `700 52px/1.15 ${FONT}`, textTransform: 'uppercase', padding: '18px 32px', textAlign: 'center'}}>
+									{outro}
+								</div>
+							</>
+						) : (
+							<div style={{background: YEL, color: INK, font: `700 74px/1.15 ${FONT}`, textTransform: 'uppercase', padding: '28px 40px', textAlign: 'center', margin: '0 70px'}}>
+								{outro}
+							</div>
+						)}
 					</AbsoluteFill>
 				</Sequence>
 			) : null}
