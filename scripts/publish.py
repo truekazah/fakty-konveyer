@@ -3,7 +3,7 @@
 #    ставит название, описание, обложку, плейлисты, открывает; встраивает в цепочку «Следующее видео» (chain.json).
 # 2) Buffer: Shorts по 3 в день одной пачкой подряд (с 10:00 по Астане; если сегодня ещё не было - сразу),
 #    в очереди Buffer не больше 9 (бесплатно - 10).
-#    Shorts ролика ставятся, когда длинный вышел (в описании ссылка на него) или через 2 дня после сборки.
+#    Shorts ролика ставятся, когда длинный вышел (в описании ссылка на него) или через сутки после сборки (решение Руслана 21.10.2026).
 import datetime as dt, json, os, pathlib, sys, tempfile, urllib.request
 from common import ROOT, TZ, git_commit, http_json, save_state, state, tg, videos
 
@@ -148,7 +148,7 @@ for q in videos():
                 future.append(dues[-1])
     if st['stage'] not in ('built', 'published'):
         continue
-    ready = st['stage'] == 'published' or NOW - dt.datetime.fromisoformat(st['built']) > dt.timedelta(days=2)
+    ready = st['stage'] == 'published' or NOW - dt.datetime.fromisoformat(st['built']) > dt.timedelta(days=1)
     if not ready:
         continue
     for s in json.loads((q / 'plan.json').read_text(encoding='utf-8')).get('SHORTS', []):

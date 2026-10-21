@@ -1,8 +1,8 @@
-# Every hour: fill and publish the long video Ruslan uploaded as a draft, keep 3 Shorts a day in Buffer.
+# Three times an hour (GitHub delays schedules by hours, more runs = smaller gap): fill and publish the long video Ruslan uploaded as a draft, keep 3 Shorts a day in Buffer.
 name: publish
 on:
   schedule:
-    - cron: '20 * * * *'
+    - cron: '7,27,47 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
