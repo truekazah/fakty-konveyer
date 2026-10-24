@@ -1,3 +1,7 @@
 {
- "stage": "ready"
+ "stage": "prepared",
+ "notes": [
+  "абзац 11: marine-iguana-01@20 убран, замены нет",
+  "абзац 11: marine-iguana-01@40 убран, замены нет"
+ ]
 }
